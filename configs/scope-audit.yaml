@@ -1,0 +1,83 @@
+scope_audit:
+  project_root: ".."
+  scope_version: "llm-nlp-v1-draft"
+  taxonomy_version: "llm-topics-v1-draft"
+
+  cutoff: "2026-10-17T00:00:00Z"
+  history_years: 10
+  window_days: 90
+
+  categories:
+  - cs.CL
+  - cs.AI
+  - cs.LG
+  - cs.IR
+
+  keywords:
+    - large language model
+    - large language models
+    - language model
+    - language models
+    - language modeling
+    - neural language
+    - pretrained language
+    - pre-trained language
+    - LLM
+    - LLMs
+    - transformer
+    - transformers
+    - GPT
+    - BERT
+    - Llama
+    - Qwen
+    - T5
+    - ELMo
+    - retrieval augmented generation
+    - retrieval-augmented
+
+  topic_cues:
+    rag:
+      - retrieval augmented
+    agents:
+      - language agent
+      - language agents
+      - llm agent
+      - llm agents
+      - tool use
+      - function calling
+      - reasoning and acting
+    reasoning:
+      - chain of thought
+      - tree of thoughts
+      - test time reasoning
+      - test time compute
+      - reasoning in language models
+    evaluation:
+      - holistic evaluation
+      - language model evaluation
+      - evaluation framework
+      - benchmark construction
+      
+  controls:
+    "1706.03762": {decision: include, topics: []}
+    "2005.11401": {decision: include, topics: [rag]}
+    "2210.03629": {decision: include, topics: [agents, reasoning]}
+    "2201.11903": {decision: include, topics: [reasoning]}
+    "2211.09110": {decision: include, topics: [evaluation]}
+    "2010.11929": {decision: exclude, topics: []}
+    "1803.11485": {decision: exclude, topics: []}
+    "1612.00593": {decision: exclude, topics: []}
+
+  samples_per_window: 10
+  broad_probe_size: 2
+  entry_limit: 40
+
+  request_interval_seconds: 3
+  request_timeout_seconds: 30
+  max_http_requests: 7
+  max_retries: 2
+  max_retry_wait_seconds: 60
+  response_limit_bytes: 4194304
+  response_budget_bytes: 20971520
+
+  user_agent: "cs-radar/0.1 (+https://github.com/MuhRaflyArj/cs-radar)"

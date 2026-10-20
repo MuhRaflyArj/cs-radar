@@ -1,0 +1,241 @@
+prepare_evaluation:
+  project_root: ".."
+  scope_config: "configs/scope-audit.yaml"
+  output_dir: "eval"
+  log_dir: "logs"
+
+  rubric:
+    schema_version: 1
+
+    usefulness_scale:
+      1: "Unusable or unsupported."
+      2: "Major gaps."
+      3: "Partially useful."
+      4: "Useful with minor gaps."
+      5: "Directly useful and clearly supported."
+
+    minimum_useful_score: 4
+    required_useful_responses: 18
+    minimum_factual_accuracy: 0.95
+    minimum_reviewed_claims: 30
+
+    special_behaviors:
+      T06: clarify
+      U01: abstain
+      U02: abstain
+
+    review_rules:
+      - "Every citation ID must resolve."
+      - >-
+        Review at least 30 factual claims across workflows,
+        or all claims if fewer than 30 exist.
+      - >-
+        Review every material comparative or growth claim,
+        regardless of the ordinary claim sample.
+      - >-
+        A factual claim passes only when accurate and supported.
+        Unsupported, contradicted, or unverified claims do not pass.
+      - >-
+        Check dates, counts, calculations, and reported results.
+        Distinguish author-reported findings from independently verified facts.
+      - >-
+        Report factual accuracy with its numerator and denominator.
+        No reviewed claims means accuracy is unknown.
+      - >-
+        Report diagnostic and holdout results separately.
+        Do not tune using holdout outputs.
+      - >-
+        Report invalid citations, unsupported claims, incomplete coverage, 
+        and unanswered questions separately
+      - >-
+        Correct abstention on U01 and U02 is required.
+        Correct clarification on T06 counts as useful behavior.
+      - >-
+        Later retrieval evaluation uses precision@5 and nDCG@10
+        with judgement coverage disclosed.
+      - "Record latency without imposing a numeric pass/fail threshold"
+      - "Answer length remains deferred."
+      - >-
+        These targets evaluate RAG answers.
+        They are not acceptance targets for the metadata classifier.
+
+  queries:
+    - query_id: G01
+      workflow: growth
+      split: diagnostic
+      question_template: "Which three collected LLM topics grew most in the recent 90 days?"
+      required_behavior: "Counts, comparison window, coverage, reading recommendations."
+      required_evidence:
+        - "Topic counts and corpus denominator for both frozen comparison windows."
+        - "Classification lineage, collection coverage, and representative paper citations."
+    
+    - query_id: G02
+      workflow: growth
+      split: diagnostic
+      question_template: "Did RAG grow in absolute paper count and share of this corpus?"
+      required_behavior: "Distinguish absolute growth from share change."
+      required_evidence:
+        - "RAG counts and total scoped-paper counts in both windows."
+        - "Reproducible absolute-change and corpus-share calculations."
+
+    - query_id: G03
+      workflow: growth
+      split: diagnostic
+      question_template: "How did agents/tool-use research change between the two windows?"
+      required_behavior: "Traceable topic membership and representative papers."
+      required_evidence:
+        - "Agent/tool-use membership and counts under one frozen classification policy."
+        - "Representative papers from both windows supporting the described changes."
+
+    - query_id: G04
+      workflow: growth
+      split: diagnostic
+      question_template: "Which reasoning/evaluation directions have the strongest growth evidence?"
+      required_behavior: "Explain taxonomy overlap and support size."
+      required_evidence:
+        - "Defined directions with counts, denominators, and support in both windows."
+        - "Traceable labels and citations supporting the interpretation."
+
+    - query_id: G05
+      workflow: growth
+      split: holdout
+      question_template: "Which apparent fast-growing topic has too small a baseline to trust?"
+      required_behavior: "Handle low/zero baselines without inflated conclusions."
+      required_evidence:
+        - "Recent and preceding counts, including low or zero baselines."
+        - "The frozen minimum-support policy and collection-coverage limitations."
+
+    - query_id: G06
+      workflow: growth
+      split: holdout
+      question_template: "Which growing topics have popular papers, and which are too recent to judge?"
+      required_behavior: "Separate growth, popularity, paper age, and missing counts."
+      required_evidence:
+        - "Topic-growth statistics under the frozen policy."
+        - "Popularity source, observation date, publication age, and missing-data flags."
+
+    - query_id: H01
+      workflow: timeline
+      split: diagnostic
+      question_template: "How did agentic LLM research evolve within the collected ten years?"
+      required_behavior: "Dated, cited milestones; no unsupported origin claim."
+      required_evidence:
+        - "Dated papers within the frozen ten-year bounds."
+        - "Passages supporting milestones and relationships, with coverage limitations."
+
+    - query_id: H02
+      workflow: timeline
+      split: diagnostic
+      question_template: "What is the timeline of RAG approaches within the allowed period?"
+      required_behavior: "Explain related approaches with supporting papers."
+      required_evidence:
+        - "Dated RAG papers within scope."
+        - "Source passages supporting the approaches and their relationships."
+
+    - query_id: H03
+      workflow: timeline
+      split: diagnostic
+      question_template: "How did tool-use approaches develop into multi-step LLM agents?"
+      required_behavior: "Distinguish explicit connections from inferred ones."
+      required_evidence:
+        - "Dated tool-use and agent papers."
+        - "Evidence for explicit connections; clearly marked interpretation otherwise."
+
+    - query_id: H04
+      workflow: timeline
+      split: diagnostic
+      question_template: "How have LLM reasoning approaches changed within this collection?"
+      required_behavior: "Explain changes rather than list dates only."
+      required_evidence:
+        - "Dated papers and passages describing reasoning methods."
+        - "Evidence for methodological changes and the conditions of comparison."
+
+    - query_id: H05
+      workflow: timeline
+      split: holdout
+      question_template: "How has evaluation of LLM agents changed over this period?"
+      required_behavior: "Name what is measured and cite supporting papers."
+      required_evidence:
+        - "Dated evaluation papers identifying tasks, protocols, and metrics."
+        - "Passages supporting the described changes in evaluation."
+
+    - query_id: H06
+      workflow: timeline
+      split: holdout
+      question_template: "Which earlier papers explain the foundations of a recent RAG approach?"
+      required_behavior: "Respect ten-year bounds and disclose older missing context."
+      required_evidence:
+        - "A recent approach and supporting earlier papers within the allowed period."
+        - "Evidence for foundational relationships and disclosure of excluded older context."
+
+    - query_id: T01
+      workflow: task
+      split: diagnostic
+      question_template: "What should I read to build a RAG system that cites supporting passages?"
+      required_behavior: "Task-specific recent and earlier reading with reasons."
+      required_evidence:
+        - "Papers and passages supporting cited-answer generation or evidence attribution."
+        - "Reasons connecting each recommendation to the requested task."
+
+    - query_id: T02
+      workflow: task
+      split: diagnostic
+      question_template: "What approaches improve the reliability of agents that use tools?"
+      required_behavior: "Ground recommendations; disclose evidence limits."
+      required_evidence:
+        - "Paper passages describing reliability methods and their evaluations."
+        - "Tasks, conditions, and limitations attached to reported improvements."
+
+    - query_id: T03
+      workflow: task
+      split: diagnostic
+      question_template: "Among collected papers reporting HotpotQA full-wiki F1, what results are comparable?"
+      required_behavior: "Verify benchmark/protocol/date; avoid global SOTA claims."
+      required_evidence:
+        - "Source results identifying dataset split, full-wiki protocol, F1, and publication date."
+        - "Relevant training, retrieval, and evaluation conditions for comparability."
+
+    - query_id: T04
+      workflow: task
+      split: diagnostic
+      question_template: "What does this collection say about long-context prompting versus RAG?"
+      required_behavior: "Compare evidence and conditions without a universal winner."
+      required_evidence:
+        - "Comparable experiments with model, task, context, retrieval, and metric details."
+        - "Source passages supporting the comparison and its limitations."
+
+    - query_id: T05
+      workflow: task
+      split: holdout
+      question_template: "How should I evaluate a RAG prototype for answer support and retrieval quality?"
+      required_behavior: "Separate retrieval, generation, and evidence support."
+      required_evidence:
+        - "Sources supporting retrieval, answer-quality, and evidence-support measures."
+        - "A clear mapping from each measure to the component it evaluates."
+
+    - query_id: T06
+      workflow: task
+      split: holdout
+      question_template: "What is the best LLM agent architecture?"
+      required_behavior: "Ask for task/benchmark constraints before ranking."
+      required_evidence:
+        - "Clarify the intended task, benchmark, and constraints before ranking architectures."
+        - "Do not invent a universally best architecture."
+
+    - query_id: U01
+      workflow: unanswerable
+      split: holdout
+      question_template: "What score will my unpublished private model get next month?"
+      required_behavior: "Explain that the corpus cannot establish it."
+      required_evidence:
+        - "No fabricated score, private-model facts, or future evidence."
+        - "Explicitly state why available corpus evidence cannot determine the answer."
+
+    - query_id: U02
+      workflow: unanswerable
+      split: holdout
+      question_template: "Which method is guaranteed to beat every future LLM paper?"
+      required_behavior: "Reject an unsupported guarantee; avoid invented evidence."
+      required_evidence:
+        - "No fabricated universal guarantee or future benchmark result."
+        - "Explicitly acknowledge the limits of available evidence."
